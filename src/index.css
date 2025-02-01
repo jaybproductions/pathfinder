@@ -74,7 +74,7 @@ button:focus {
 
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(9, 40px); /* Adjust based on the number of columns */
+  grid-template-columns: repeat(25, 40px); /* Adjust based on the number of columns */
   gap: 4px; /* Small gap for a modern look */
   background-color: #e5e7eb; /* Light gray background */
   padding: 10px;

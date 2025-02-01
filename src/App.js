@@ -1,19 +1,69 @@
 import { useEffect, useState } from 'react';
 
 const App = () => {
-    
-    const [arr, setArr] = useState([
-        [0, 1, 0, 0, 0, 1, 1, 1, 1],
-        [0, 0, 0, 1, 0, 1, 1, 0, 1],
-        [0, 1, 0, 1, 0, 1, 1, 0, 1],
-        [0, 0, 0, 1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1, 1, 1, 2, 1],
-        [0, 1, 0, 0, 0, 1, 0, 0, 0],
-    ]);
+  const [visited, setVisited] = useState(new Set());
+  const [path, setPath] = useState([]);
+  const [arr, setArr] = useState([]);
+  const [goal, setGoal] = useState([]);
 
-    const [goal, setGoal] = useState([4, 7]);
-    const [visited, setVisited] = useState(new Set());
-    const [path, setPath] = useState([]);
+  function generateGridWithPath(rows, cols) {
+    const grid = Array.from({ length: rows }, () => Array(cols).fill(1)); // Fill with walls
+
+    // Random start and goal positions
+    const startX = Math.floor(Math.random() * rows);
+    const startY = Math.floor(Math.random() * cols);
+    let goalX = Math.floor(Math.random() * rows);
+    let goalY = Math.floor(Math.random() * cols);
+
+    // Ensure start and goal are not the same
+    while (startX === goalX && startY === goalY) {
+        goalX = Math.floor(Math.random() * rows);
+        goalY = Math.floor(Math.random() * cols);
+    }
+
+    // Create a guaranteed path from start to goal
+    let currentX = startX;
+    let currentY = startY;
+    grid[currentX][currentY] = 0; // Mark start as open
+
+    while (currentX !== goalX || currentY !== goalY) {
+        if (currentX !== goalX && (Math.random() < 0.5 || currentY === goalY)) {
+            currentX += currentX < goalX ? 1 : -1;
+        } else {
+            currentY += currentY < goalY ? 1 : -1;
+        }
+        grid[currentX][currentY] = 0; // Carve the path
+    }
+
+    // Place the goal
+    grid[goalX][goalY] = 2;
+
+    // Randomly fill the remaining grid with open spaces and walls
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            if (grid[i][j] === 1) { // Only overwrite if it's still a wall
+                grid[i][j] = Math.random() < 0.3 ? 1 : 0; // 30% chance of wall
+            }
+        }
+    }
+
+    console.log(`Goal at: (${goalX}, ${goalY})`);
+    return { grid, goal: [goalX, goalY] };
+}
+
+  useEffect(() => {
+      setGridAndGoal();
+  }, []);
+
+
+  const setGridAndGoal = () => {
+    setVisited(new Set());
+    setPath([]);
+    const { grid, goal } = generateGridWithPath(10, 25);
+    setArr(grid);
+    setGoal(goal)
+  }
+
 
     const DIR = [[0, 1], [0, -1], [-1, 0], [1, 0]];
 
@@ -38,6 +88,8 @@ const App = () => {
     };
 
     const runAStar = async (start) => {
+      setVisited(new Set());
+      setPath([]);
         let newVisited = new Set();
         let queue = [new Node(start, 0, heuristic(start[0], start[1], goal[0], goal[1]))];
 
@@ -76,6 +128,9 @@ const App = () => {
   <div className="app-container">
     <button className="find-path-btn" onClick={() => runAStar([0, 0])}>
       Find Path
+    </button>
+    <button className="find-path-btn" onClick={() => setGridAndGoal()}>
+      Generate New Grid
     </button>
     <div className="grid-container">
       {arr.map((row, rowIndex) =>
